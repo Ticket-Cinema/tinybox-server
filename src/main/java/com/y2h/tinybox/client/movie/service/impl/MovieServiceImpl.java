@@ -2,15 +2,19 @@ package com.y2h.tinybox.client.movie.service.impl;
 
 import com.y2h.tinybox.client.movie.Movie;
 import com.y2h.tinybox.client.movie.Person;
+import com.y2h.tinybox.client.movie.repository.DirectorRepository;
 import com.y2h.tinybox.client.movie.repository.MovieRepository;
 import com.y2h.tinybox.client.movie.service.MovieService;
 import com.y2h.tinybox.client.movie.Director;
 import com.y2h.tinybox.client.movie.service.dto.MovieDetailDto;
+import com.y2h.tinybox.client.movie.service.dto.MovieDto;
+import com.y2h.tinybox.client.movie.service.dto.PersonDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -18,98 +22,104 @@ public class MovieServiceImpl implements MovieService {
 
     private final MovieRepository movieRepository;
 
+    private final DirectorRepository directorRepository;
+
     /**
-     * 제목으로 영화 찾기
-     *
-     * @param title 제목
-     * @return List<MovieDetailDto> 영화 리스트
+     * 영화 목록 조회
+     * @param map key - 키워드, word - 검색어(개봉기간 검색 시 시작기간), period - 개봉기간 검색 시 종료기간
+     * @return List<MovieDto>
      */
     @Override
-    public List<MovieDetailDto> getByTitle(String title) {
-        List<Object[]> results = movieRepository.getMoviesByTitle(title);
+    public List<MovieDto> getMovie(Map<String, String> map) {
+        List<Movie> results = null;
+        String key = map.get("key");
+        String word = map.get("word");
+        // key가 없을 때 전체 검색
+        if (key == null) {
+            results = movieRepository.getMovies();
+        }
+        // key가 제목 검색일 때
+        else if (key.equals("제목")) {
+            results = movieRepository.getMoviesByTitle(word);
+        }
+        // key가 배우 검색일 때
+        else if (key.equals("배우/감독")) {
+            results = movieRepository.getMoviesByPerson(word);
+        }
+        // key가 개봉기간 검색일 때
+        else if (key.equals("개봉기간")) {
+            String period = map.get("period");
+            results = movieRepository.getMoviesByOpenDate(word, period);
+        }
+        // key가 국가 검색일 때
+        else if (key.equals("국가")) {
+            results = movieRepository.getMoviesByNation(word);
+        }
+        // key가 평균별점 검색일 때
+        else if (key.equals("평균별점")) {
+            results = movieRepository.getMoviesByAvgStar(Double.parseDouble(word));
+        }
+        // key가 장르 검색일 때
+        else if (key.equals("장르")) {
+            results = movieRepository.getMoviesByGenre(word);
+        }
+        // key가 연령제한 검색일 때
+        else if (key.equals("연령제한")) {
+            results = movieRepository.getMoviesByAgeLimit(word);
+        }
         return getMovieList(results);
     }
 
     /**
-     * 사람으로 영화 찾기
-     * @param name 사람(배우, 감독)
-     * @return List<MovieDetailDto> 영화 리스트
-     */
-    @Override
-    public List<MovieDetailDto> getByPerson(String name) {
-        List<Object[]> results = movieRepository.getMoviesByPerson(name);
-        return getMovieList(results);
-    }
-
-    /**
-     * 개봉기간으로 영화 찾기
-     * @param startDate 개봉기간 시작
-     * @param endDate 개봉기간 끝
-     * @return List<MovieDetailDto> 영화 리스트
-     */
-    @Override
-    public List<MovieDetailDto> getByOpenDate(String startDate, String endDate) {
-        List<Object[]> results = movieRepository.getMoviesByOpenDate(startDate, endDate);
-        return getMovieList(results);
-    }
-
-    /**
-     * 개봉 나라로 영화 찾기
-     * @param nation 나라
-     * @return List<MovieDetailDto> 영화 리스트
-     */
-    @Override
-    public List<MovieDetailDto> getByNation(String nation) {
-        List<Object[]> results = movieRepository.getMoviesByNation(nation);
-        return getMovieList(results);
-    }
-
-    /**
-     * 평균 별점으로 영화 찾기
-     * @param avgStar 평균 별점
-     * @return List<MovieDetailDto> 영화 리스트
-     */
-    @Override
-    public List<MovieDetailDto> getByAvgStar(double avgStar) {
-        List<Object[]> results = movieRepository.getMoviesByAvgStar(avgStar);
-        return getMovieList(results);
-    }
-
-    /**
-     * 장르로 영화 찾기
-     * @param genre 장르
-     * @return List<MovieDetailDto> 영화 리스트
-     */
-    @Override
-    public List<MovieDetailDto> getByGenre(String genre) {
-        List<Object[]> results = movieRepository.getMoviesByGenre(genre);
-        return getMovieList(results);
-    }
-
-    /**
-     * 나이 제한으로 영화 찾기
-     * @param ageLimit 나이 제한
-     * @return List<MovieDetailDto> 영화 리스트
-     */
-    @Override
-    public List<MovieDetailDto> getByAgeLimit(String ageLimit) {
-        List<Object[]> results = movieRepository.getMoviesByAgeLimit(ageLimit);
-        return getMovieList(results);
-    }
-
-    /**
-     * 영화 리스트 반환
-     * @param results List<Object[]> 형태의 리스트 인자
+     * 영화 상세 정보 출력
+     * @param movieId 영화 식별 번호
      * @return List<MovieDetailDto>
      */
-    public List<MovieDetailDto> getMovieList(List<Object[]> results) {
-        List<MovieDetailDto> movieDetailDtos = new ArrayList<>();
-        for (Object[] result : results) {
-            Movie movie = (Movie) result[0];
-            Director director = (Director) result[1];
-            Person person = (Person) result[2];
+    @Override
+    public MovieDetailDto getMovieDetail(Long movieId) {
+        Movie movie = movieRepository.getMoviesById(movieId);
+        List<Object[]> results = directorRepository.getPersonDirectors(movie);
 
-            movieDetailDtos.add(MovieDetailDto.builder()
+        MovieDetailDto movieDetailDto = new MovieDetailDto();
+        List<PersonDto> personDtos = new ArrayList<>();
+        for (Object[] result : results) {
+            Director director = (Director) result[0];
+            Person person = (Person) result[1];
+
+            personDtos.add(PersonDto.builder()
+                    .name(person.getName())
+                    .birth(person.getBirth())
+                    .nation(person.getNation())
+                    .type(director.getType())
+                    .build());
+        }
+        movieDetailDto = (MovieDetailDto.builder()
+                .koreanTitle(movie.getKoreanTitle())
+                .englishTitle(movie.getEnglishTitle())
+                .openDate(movie.getOpenDate())
+                .genre(movie.getGenre())
+                .plot(movie.getPlot())
+                .nation(movie.getNation())
+                .runningTime(movie.getRunningTime())
+                .avgStar(movie.getAvgStar())
+                .ageLimit(movie.getAgeLimit())
+                .posterStoreFileName(movie.getPosterStoreFileName())
+                .personDtoList(personDtos)
+                .build());
+        return movieDetailDto;
+    }
+
+    /**
+     * 영화 리스트 반환 - 전체조회
+     * @param results List<Movie> 형태의 인자
+     * @return List<MovieDto>
+     */
+    public List<MovieDto> getMovieList(List<Movie> results) {
+        List<MovieDto> movieDtos = new ArrayList<>();
+        for (Movie result : results) {
+            Movie movie = (Movie) result;
+
+            movieDtos.add(MovieDto.builder()
                     .koreanTitle(movie.getKoreanTitle())
                     .englishTitle(movie.getEnglishTitle())
                     .openDate(movie.getOpenDate())
@@ -119,13 +129,8 @@ public class MovieServiceImpl implements MovieService {
                     .runningTime(movie.getRunningTime())
                     .avgStar(movie.getAvgStar())
                     .ageLimit(movie.getAgeLimit())
-                    .posterStoreFileName(movie.getPosterStoreFileName())
-                    .personName(person.getName())
-                    .personBirth(person.getBirth())
-                    .personNation(person.getNation())
-                    .personType(director.getType())
                     .build());
         }
-        return movieDetailDtos;
+        return movieDtos;
     }
 }

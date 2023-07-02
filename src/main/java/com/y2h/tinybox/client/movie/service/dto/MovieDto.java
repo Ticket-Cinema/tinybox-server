@@ -2,10 +2,7 @@ package com.y2h.tinybox.client.movie.service.dto;
 
 import lombok.Builder;
 
-import java.util.List;
-
-public class MovieDetailDto {
-
+public class MovieDto {
     private String koreanTitle;
     private String englishTitle;
     private String genre;
@@ -15,15 +12,9 @@ public class MovieDetailDto {
     private int runningTime;
     private double avgStar;
     private String ageLimit;
-    private String posterUploadFileName;
-    private String posterStoreFileName;
-    private List<PersonDto> personDtoList;
-
-    public MovieDetailDto() {
-    }
 
     @Builder
-    public MovieDetailDto(String koreanTitle, String englishTitle, String genre, String openDate, String plot, String nation, int runningTime, double avgStar, String ageLimit, String posterUploadFileName, String posterStoreFileName, List<PersonDto> personDtoList) {
+    public MovieDto(String koreanTitle, String englishTitle, String genre, String openDate, String plot, String nation, int runningTime, double avgStar, String ageLimit) {
         this.koreanTitle = koreanTitle;
         this.englishTitle = englishTitle;
         this.genre = genre;
@@ -33,14 +24,11 @@ public class MovieDetailDto {
         this.runningTime = runningTime;
         this.avgStar = avgStar;
         this.ageLimit = ageLimit;
-        this.posterUploadFileName = posterUploadFileName;
-        this.posterStoreFileName = posterStoreFileName;
-        this.personDtoList = personDtoList;
     }
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("MovieDetailDto{");
+        final StringBuffer sb = new StringBuffer("MovieDto{");
         sb.append("koreanTitle='").append(koreanTitle).append('\'');
         sb.append(", englishTitle='").append(englishTitle).append('\'');
         sb.append(", genre='").append(genre).append('\'');
@@ -50,9 +38,6 @@ public class MovieDetailDto {
         sb.append(", runningTime=").append(runningTime);
         sb.append(", avgStar=").append(avgStar);
         sb.append(", ageLimit='").append(ageLimit).append('\'');
-        sb.append(", posterUploadFileName='").append(posterUploadFileName).append('\'');
-        sb.append(", posterStoreFileName='").append(posterStoreFileName).append('\'');
-        sb.append(", personDtoList=").append(personDtoList);
         sb.append('}');
         return sb.toString();
     }
