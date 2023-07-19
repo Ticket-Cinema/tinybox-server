@@ -118,7 +118,7 @@ public class EventApiController {
 
 
     @ApiOperation(value = "이벤트 삭제")
-    @GetMapping("/{id}")
+    @GetMapping("/change/{id}")
     private ResponseEntity<?> deleteEvent(@PathVariable("id") Long id) {
         log.debug("DeleteEventById={}", id);
 
